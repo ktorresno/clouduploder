@@ -140,7 +140,10 @@ check_storage_acc() {
 # Create an Azure storage account
 create_az_storage() {
     #check_storage_acc
-    export AZ_STORAGE_ACC_NAME="ktorressauploader"
+    if [ -z $AZ_STORAGE_ACC_NAME ] # True if the length of string is zero.
+    then
+        export AZ_STORAGE_ACC_NAME="ktorressauploader"
+    fi
     # Get the connection string for the storage account
     local azure_storage_connection_string=$(az storage account show-connection-string --name "$AZ_STORAGE_ACC_NAME" --resource-group "$resource_group" --output tsv)
     export AZURE_STORAGE_CONNECTION_STRING=$azure_storage_connection_string
@@ -177,5 +180,6 @@ do
     else
         # Upload the file to Azure.
         echo "_____Found____: $x"
+        az storage blob upload -f $x -n $x -c $container
     fi
 done
