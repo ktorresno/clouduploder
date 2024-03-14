@@ -120,31 +120,52 @@ check_storage_acc() {
     fi
 
     while true; do
-            read -p "Enter storage account name: " storageAccountName
-            # Checks if the name already exists
-            local checkAccName=$(az storage account check-name --name $storageAccountName --query "nameAvailable")
-            if [ $checkAccName == false ]
-            then 
-                echo "The name $storageAccountName is already taken, please provide another name..."
-            else
-                # Command to create a storage account
-                az storage account create --name "$storageAccountName" --resource-group "$resource_group" --location "$selected_region" --sku Standard_LRS --encryption-services blob
-                # Command to list storage accounts
-                echo "ELSE list the storage accounts existing:"
-                # az storage account list -g "$resource_group"
-                break
-            fi
-        done
-    # Get the connection string for the storage account
-#connection_string=$(az storage account show-connection-string --name $storageAccountName --resource-group $resource_group --output tsv)
+        read -p "Enter storage account name: " storageAccountName
+        # Checks if the name already exists
+        local checkAccName=$(az storage account check-name --name $storageAccountName --query "nameAvailable")
+        if [ $checkAccName == false ]
+        then 
+            echo "The name $storageAccountName is already taken, please provide another name..."
+        else
+            # Command to create a storage account
+            az storage account create --name "$storageAccountName" --resource-group "$resource_group" --location "$selected_region" --sku Standard_LRS --encryption-services blob
+            AZ_STORAGE_ACC_NAME=$storageAccountName
+            # Command to list storage accounts
+            # az storage account list -g "$resource_group"
+            break
+        fi
+    done
 }
 
 # Create an Azure storage account
-create_az_storage_acc() {
-    check_storage_acc
+create_az_storage() {
+    #check_storage_acc
+    export AZ_STORAGE_ACC_NAME="ktorressauploader"
+    # Get the connection string for the storage account
+    local azure_storage_connection_string=$(az storage account show-connection-string --name "$AZ_STORAGE_ACC_NAME" --resource-group "$resource_group" --output tsv)
+    export AZURE_STORAGE_CONNECTION_STRING=$azure_storage_connection_string
+    create_container
 }
 
-create_az_storage_acc
+create_container() {
+    # echo "AZURE_STORAGE_CONNECTION_STRING: $AZURE_STORAGE_CONNECTION_STRING"
+    # echo "AZ_STORAGE_ACC_NAME: $AZ_STORAGE_ACC_NAME"
+    while true; do
+        read -p "Enter Container name: " container
+        # Checks if the name already exists
+        if [ "$(az storage container exists --name "$container" --account-name "$AZ_STORAGE_ACC_NAME" --query "exists")" = true ]; then 
+            echo "The container name: $container is already taken, please provide another name..."
+        else
+            # Command to create a Container
+            az storage container create --account-name $AZ_STORAGE_ACC_NAME --name $container --connection-string $AZURE_STORAGE_CONNECTION_STRING
+            # Command to list Container
+            az storage container list
+            break
+        fi
+    done
+}
+
+create_az_storage
 
 for x in $@
 do
