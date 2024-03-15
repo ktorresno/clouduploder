@@ -180,6 +180,7 @@ do
     else
         # Upload the file to Azure.
         echo "_____Found____: $x"
-        az storage blob upload -f $x -n $x -c $container
+        baseName=$(basename ${x})
+        az storage blob upload -f $x -n $baseName -c $container
     fi
 done
