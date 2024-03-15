@@ -162,7 +162,7 @@ create_container() {
             # Command to create a Container
             az storage container create --account-name $AZ_STORAGE_ACC_NAME --name $container --connection-string $AZURE_STORAGE_CONNECTION_STRING
             # Command to list Container
-            az storage container list
+            #az storage container list
             break
         fi
     done
@@ -170,17 +170,23 @@ create_container() {
 
 create_az_storage
 
-for x in $@
+for absolutePathFile in $@
 do
     # echo "Entered arg is: $x"
     # Verify the list of file paramenters space separated, and let user know
     # if one or more files where not found.
-    if [ ! -f $x ]; then
-        echo "File not found: $x"
+    if [ ! -f $absolutePathFile ]; then
+        echo "File not found: $absolutePathFile"
     else
         # Upload the file to Azure.
-        echo "_____Found____: $x"
-        baseName=$(basename ${x})
-        az storage blob upload -f $x -n $baseName -c $container
+        #echo "_____Found____: $absolutePathFile"
+        baseName=$(basename ${absolutePathFile})
+        # Each parameter read it's a different file to be uploaded
+        az storage blob upload -f $absolutePathFile -n $baseName -c $container
+        # Generate a shared access signature for the file with read-only permission.
+        #end=`date -u -d "30 minutes" '+%Y-%m-%dT%H:%MZ'`
+        end='2024-03-16T00:00:00Z'
+        urlReadAccessToken=$(az storage blob generate-sas --account-name $AZ_STORAGE_ACC_NAME --container-name $container --name $baseName --permissions r --expiry $end --https-only --full-uri)
+        echo "URL to access the resorce uploaded: $urlReadAccessToken"
     fi
 done
