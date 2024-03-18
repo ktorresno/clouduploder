@@ -185,8 +185,8 @@ do
         az storage blob upload -f $absolutePathFile -n $baseName -c $container
         # Generate a shared access signature for the file with read-only permission.
         #end=`date -u -d "30 minutes" '+%Y-%m-%dT%H:%MZ'`
-        end='2024-03-16T00:00:00Z'
-        urlReadAccessToken=$(az storage blob generate-sas --account-name $AZ_STORAGE_ACC_NAME --container-name $container --name $baseName --permissions r --expiry $end --https-only --full-uri)
+        expiryDate=$(date -j -f  '%a %b %d %T %Z %Y' "`date -v+12H`" '+%Y-%m-%dT%H:%M:00Z')
+        urlReadAccessToken=$(az storage blob generate-sas --account-name $AZ_STORAGE_ACC_NAME --container-name $container --name $baseName --permissions r --expiry $expiryDate --https-only --full-uri)
         echo "URL to access the resorce uploaded: $urlReadAccessToken"
     fi
 done
